@@ -1,0 +1,68 @@
+@RestResource(urlMapping='/sampleWebService1/*')              
+  global class WebService1 {
+   
+     @HttpGet
+         global static Account gettingRecordDetails(){
+             RestRequest req = RestContext.request;
+             RestResponse res = RestContext.response;
+             
+             string acc = req.requestURI.subString(req.requestURI.lastIndexof('/')+1);
+              Account objectinfo = [SELECT id, Name, Ownerid from Account Where id =: acc];
+              return objectinfo;
+         }
+      
+      @HTTPPOST
+       global static String insertingRecord(string hName, string hphone, string hDescription){
+           Account acc = new Account();
+           acc.Name = hName;
+           acc.Phone = hphone;
+           acc.Description = hDescription;
+           insert acc;
+           return 'Inserted'  + acc.id;
+       }
+      
+      @HTTPDELETE
+      global static map<string,string> deleteMethod(){
+          
+       Map<string,string> responceMap = new Map<string,string>();
+          RestRequest accountRequest = RestContext.Request;
+          string accountRequestURI = accountRequest.requestURI;
+          
+          Id accountId = Id.valueof(accountRequestURI.substring(accountRequestURI.lastIndexOf('/')+1));
+          Account account = new Account(Id=accountId);
+          
+          try{
+             delete account;
+              responceMap.put('success','1');
+              responceMap.put('message','Record successfully deleted');  
+          }
+          catch(Dmlexception e){
+               responceMap.put('success','0');
+              responceMap.put('message',e.getMessage()); 
+          }
+          
+          return responceMap;
+      }
+      
+       @HTTPPUT
+      global static Account putMethod(string name, string phone, string rating, string fax){
+          
+          RestRequest accountRequest = RestContext.Request;
+          string accountRequestURI = accountRequest.requestURI;
+          
+         string accountId = accountRequestURI.substring(accountRequestURI.lastIndexOf('/')+1);
+          Account account = new Account();
+          
+          if(string.isNotEmpty(accountId)){
+              account.Id = accountId;
+          }
+          account.Rating = rating;
+          account.Name = name;
+          account.Phone = phone;
+          account.Fax = fax;
+          
+          upsert account;
+      
+      return account;
+      }
+}
